@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignVox Web — AI Sign Language Translator 🤟</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- MediaPipe Hand Tracking CDNs (Loads client-side AI) -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <!-- Background glowing accents -->
+    <div class="glow-bg glow-purple"></div>
+    <div class="glow-bg glow-cyan"></div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo-icon">🤟</div>
+                <div class="brand-text">
+                    <h1>SignVox <span>Web</span></h1>
+                    <p>AI-Powered Sign Language to Speech Translator</p>
+                </div>
+            </div>
+            <div class="status-indicator" id="system-status">
+                <span class="status-dot pulsing"></span>
+                <span class="status-text">Loading Model...</span>
+            </div>
+        </header>
+
+        <!-- DASHBOARD GRID -->
+        <main class="dashboard-grid">
+            <!-- CAMERA PORT -->
+            <section class="card webcam-card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-video"></i> Live Camera Feed</h3>
+                    <button id="toggle-camera-btn" class="btn btn-secondary btn-sm" disabled>Start Camera</button>
+                </div>
+                <div class="webcam-viewport">
+                    <video id="webcam" autoplay playsinline muted style="display: none;"></video>
+                    <canvas id="output-canvas"></canvas>
+                    <div class="camera-placeholder" id="camera-placeholder">
+                        <p>Loading hand tracking systems...</p>
+                    </div>
+                </div>
+                <div class="feed-footer">
+                    <span>FPS: <strong id="fps-counter">0</strong></span>
+                    <span>Status: <strong id="hand-count">No hands</strong></span>
+                </div>
+            </section>
+
+            <!-- TRANSLATION & VOICE SETTINGS -->
+            <div class="dashboard-sidebar">
+                <section class="card translation-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-message-captions"></i> Live Translation</h3>
+                        <button id="clear-text-btn" class="btn btn-danger btn-sm">Clear</button>
+                    </div>
+                    <div class="translation-body">
+                        <div class="current-letter-container">
+                            <span class="label">Current Detection</span>
+                            <h2 class="current-letter" id="current-letter">—</h2>
+                            <div class="confidence-bar-container">
+                                <span class="confidence-label">Confidence: <span id="confidence-percentage">0%</span></span>
+                                <div class="confidence-bar"><div class="confidence-fill" id="confidence-fill"></div></div>
+                            </div>
+                        </div>
+                        <div class="word-accumulator">
+                            <span class="label">Formed Sentence / Word</span>
+                            <div class="accumulated-text-box">
+                                <p id="accumulated-text" class="placeholder-text">Translated words will appear here...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="translation-footer">
+                        <button id="speak-sentence-btn" class="btn btn-primary btn-block">Speak Full Text</button>
+                    </div>
+                </section>
+
+                <section class="card settings-card">
+                    <div class="card-header"><h3>Voice Controls</h3></div>
+                    <div class="card-body form-grid">
+                        <div class="form-group">
+                            <label for="voice-select">Speaker Voice</label>
+                            <select id="voice-select" class="form-control"><option>Loading...</option></select>
+                        </div>
+                        <div class="form-group-row">
+                            <div class="form-group">
+                                <label for="voice-rate">Speed (<span id="rate-val">1.0</span>x)</label>
+                                <input type="range" id="voice-rate" min="0.5" max="2.0" step="0.1" value="1.0" class="slider">
+                            </div>
+                            <div class="form-group">
+                                <label for="voice-pitch">Pitch (<span id="pitch-val">1.0</span>)</label>
+                                <input type="range" id="voice-pitch" min="0.5" max="2.0" step="0.1" value="1.0" class="slider">
+                            </div>
+                        </div>
+                        <div class="checkbox-group">
+                            <label class="switch-container">
+                                <input type="checkbox" id="auto-speak-toggle" checked>
+                                <span class="switch-slider"></span>
+                            </label>
+                            <span class="checkbox-label">Auto-Speak on detection</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- CUSTOM GESTURE TRAINER -->
+        <section class="card trainer-card">
+            <div class="card-header">
+                <h3><i class="fa-solid fa-graduation-cap"></i> AI Gesture Trainer</h3>
+                <span class="badge" id="gesture-count">0 gestures registered</span>
+            </div>
+            <div class="trainer-body">
+                <div class="trainer-left">
+                    <p class="trainer-desc">Train custom signs! Enter a name, hold your hand in that gesture, and click <b>Record Sample</b>. (Record 5-10 samples from slightly different angles for best results).</p>
+                    <div class="trainer-inputs">
+                        <div class="form-group">
+                            <label for="gesture-label">Sign Label (e.g. A, B, HELLO, YES)</label>
+                            <input type="text" id="gesture-label" placeholder="Enter sign name..." class="form-control">
+                        </div>
+                        <div class="btn-group">
+                            <button id="record-sample-btn" class="btn btn-success" disabled>Record Sample (<span id="sample-count">0</span>)</button>
+                            <button id="reset-sign-btn" class="btn btn-secondary">Clear Sign</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="trainer-right">
+                    <span class="label">Registered Database</span>
+                    <div class="gestures-list-container">
+                        <div class="gestures-list" id="gestures-list">
+                            <p class="empty-list-text">No custom signs recorded yet.</p>
+                        </div>
+                    </div>
+                    <div class="trainer-actions">
+                        <button id="reset-all-btn" class="btn btn-danger btn-sm">Reset All</button>
+                        <button id="download-data-btn" class="btn btn-secondary btn-sm">Export Data</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TEAM CREDITS FOOTER -->
+        <footer class="app-footer-credits">
+            <div class="team-names">
+                <h4>Developed by Project Team</h4>
+                <div class="names-grid">
+                    <span>A L Prajwal Rao</span>
+                    <span>Aadithya Kumar</span>
+                    <span>Abhay Surya S</span>
+                    <span>Adithya Raj</span>
+                    <span>Ajit Suresh Patgar</span>
+                </div>
+            </div>
+            <p>© 2026 Sapthagiri NPS University • Bangalore</p>
+        </footer>
+    </div>
+    
+    <!-- Load exported training data (DO NOT remove this) -->
+    <script src="pretrained_data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
