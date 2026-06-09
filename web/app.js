@@ -165,25 +165,6 @@ function normalizeLandmarks(landmarks) {
     return normalized;
 }
 
-// Rule Classifier: Out-of-the-box geometric rules
-function classifyGeometrically(landmarks) {
-    const isIndexOpen = landmarks[8].y < landmarks[6].y;
-    const isMiddleOpen = landmarks[12].y < landmarks[10].y;
-    const isRingOpen = landmarks[16].y < landmarks[14].y;
-    const isPinkyOpen = landmarks[20].y < landmarks[18].y;
-    const palmWidth = Math.abs(landmarks[5].x - landmarks[17].x);
-    const isThumbOpen = Math.abs(landmarks[4].x - landmarks[2].x) > palmWidth * 0.7;
-
-    if (isIndexOpen && isMiddleOpen && isRingOpen && isPinkyOpen && isThumbOpen) return { label: "Five", confidence: 0.95 };
-    if (!isIndexOpen && !isMiddleOpen && !isRingOpen && !isPinkyOpen) return { label: "Fist", confidence: 0.90 };
-    if (isIndexOpen && !isMiddleOpen && !isRingOpen && !isPinkyOpen) return { label: "Point", confidence: 0.92 };
-    if (isIndexOpen && isThumbOpen && !isMiddleOpen && !isRingOpen && !isPinkyOpen) return { label: "L", confidence: 0.94 };
-    if (isPinkyOpen && isThumbOpen && !isIndexOpen && !isMiddleOpen && !isRingOpen) return { label: "Y", confidence: 0.95 };
-    if (isIndexOpen && isMiddleOpen && !isRingOpen && !isPinkyOpen) return { label: "Peace", confidence: 0.93 };
-    if (isIndexOpen && isPinkyOpen && isThumbOpen && !isMiddleOpen && !isRingOpen) return { label: "I Love You", confidence: 0.96 };
-    return null;
-}
-
 // KNN Classifier (Calculates 2D Euclidean distance to templates)
 function classifyKNN(normalizedFeatures) {
     if (customGesturesDb.length === 0) return null;
@@ -216,9 +197,8 @@ function classifyKNN(normalizedFeatures) {
 
 function predictGesture(landmarks) {
     const norm = normalizeLandmarks(landmarks);
-    let res = classifyKNN(norm);
-    if (!res) res = classifyGeometrically(landmarks);
-    return res;
+    // ONLY use your custom trained gestures! Pre-defined geometric rules are completely disabled.
+    return classifyKNN(norm); 
 }
 
 // Process camera feed results
@@ -284,19 +264,31 @@ function onResults(results) {
 hands.onResults(onResults);
 
 function handleConfirmedLetter(letter) {
-    if (letter === "Fist") { clearWordAccumulator(); speakText("Cleared"); return; }
-    if (letter === "Five" || letter === "Point") return;
-
     if (accumulatedTextBox.querySelector('.placeholder-text')) {
         accumulatedTextBox.innerHTML = '<p id="accumulated-text"></p>';
     }
     const textEl = document.getElementById('accumulated-text');
-    const lastChar = textEl.textContent.charAt(textEl.textContent.length - 1);
     
-    if (lastChar !== letter) {
-        textEl.textContent += letter;
-        wordBuilderText = textEl.textContent;
-        if (autoSpeak) speakText(letter);
+    // If it's a word (length > 1), check if matches last word in box
+    if (letter.length > 1) {
+        const words = textEl.textContent.trim().split(/\s+/);
+        const lastWord = words[words.length - 1];
+        if (lastWord !== letter) {
+            if (textEl.textContent.length > 0 && !textEl.textContent.endsWith(' ')) {
+                textEl.textContent += ' ';
+            }
+            textEl.textContent += letter + ' ';
+            wordBuilderText = textEl.textContent;
+            if (autoSpeak) speakText(letter);
+        }
+    } else {
+        // If it's a letter, check if matches last character in box
+        const lastChar = textEl.textContent.slice(-1);
+        if (lastChar !== letter) {
+            textEl.textContent += letter;
+            wordBuilderText = textEl.textContent;
+            if (autoSpeak) speakText(letter);
+        }
     }
 }
 
