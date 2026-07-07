@@ -80,7 +80,33 @@
                         </div>
                     </div>
                     <div class="translation-footer">
+                        <button id="add-letter-btn" class="btn btn-secondary" title="Add the letter currently detected by the camera">
+                            <i class="fa-solid fa-plus"></i> Add Detected Letter
+                        </button>
+                        <button id="add-space-btn" class="btn btn-secondary" title="Add a space">
+                            <i class="fa-solid fa-arrows-left-right-to-line"></i> Space
+                        </button>
+                        <button id="backspace-btn" class="btn btn-secondary" title="Delete last character">
+                            <i class="fa-solid fa-delete-left"></i> Backspace
+                        </button>
                         <button id="speak-sentence-btn" class="btn btn-primary btn-block">Speak Full Text</button>
+                    </div>
+                </section>
+
+                <section class="card keyboard-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-keyboard"></i> Manual Letter Input</h3>
+                        <div class="checkbox-group">
+                            <label class="switch-container small">
+                                <input type="checkbox" id="auto-append-toggle" checked>
+                                <span class="switch-slider"></span>
+                            </label>
+                            <span class="checkbox-label">Auto-add from camera</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="trainer-desc">Tap letters to build your sentence yourself — handy if the camera misses a sign, or if you just want to type directly.</p>
+                        <div class="onscreen-keyboard" id="onscreen-keyboard"></div>
                     </div>
                 </section>
 

@@ -43,9 +43,9 @@ body {
 .app-container { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 2rem; }
 .app-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; }
 .brand { display: flex; align-items: center; gap: 1rem; }
-.logo-icon { font-size: 2.5rem; background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.logo-icon { font-size: 2.5rem; background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .brand-text h1 { font-family: var(--font-heading); font-size: 2rem; }
-.brand-text h1 span { background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.brand-text h1 span { background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .brand-text p { color: var(--text-secondary); font-size: 0.9rem; }
 
 .status-indicator { display: flex; align-items: center; gap: 0.75rem; background: hsla(222, 20%, 20%, 0.5); border: 1px solid var(--border-color); padding: 0.5rem 1.25rem; border-radius: 50px; font-size: 0.85rem; }
@@ -81,7 +81,7 @@ body {
 .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
 .form-group-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .form-control { background-color: hsla(222, 20%, 5%, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem 1rem; color: var(--text-primary); }
-.slider { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 5px; background: var(--border-color); }
+.slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 5px; background: var(--border-color); }
 .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent-purple); cursor: pointer; }
 
 .checkbox-group { display: flex; align-items: center; gap: 1rem; }
@@ -101,6 +101,28 @@ input:checked + .switch-slider:before { transform: translateX(20px); }
 .btn-block { width: 100%; }
 .badge { background: var(--accent-purple-glow); border: 1px solid var(--accent-purple); padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.75rem; }
 
+.translation-footer { padding: 1.25rem 1.5rem; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.translation-footer .btn-block { grid-column: 1 / -1; }
+ 
+.keyboard-card .card-body { padding: 1.5rem; }
+.keyboard-card .card-header { flex-wrap: wrap; row-gap: 0.5rem; }
+.keyboard-card .switch-container.small { width: 36px; height: 20px; margin-left: auto; }
+.keyboard-card .switch-container.small .switch-slider:before { height: 12px; width: 12px; }
+.keyboard-card .switch-container.small input:checked + .switch-slider:before { transform: translateX(16px); }
+.trainer-desc { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem; }
+ 
+.onscreen-keyboard { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.key-btn {
+    flex: 1 1 40px; min-width: 40px; max-width: 52px; aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    background-color: hsla(222, 20%, 20%, 0.5); border: 1px solid var(--border-color);
+    border-radius: 8px; color: var(--text-primary); font-family: var(--font-heading);
+    font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+}
+.key-btn:hover { background-color: var(--accent-purple-glow); border-color: var(--accent-purple); transform: translateY(-2px); }
+.key-btn:active { transform: translateY(0); }
+.key-btn.key-space { flex: 1 1 100%; max-width: none; aspect-ratio: auto; height: 44px; }
+ 
 .trainer-body { padding: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; }
 .trainer-inputs { display: flex; flex-direction: column; gap: 1.25rem; }
 .btn-group { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1rem; }

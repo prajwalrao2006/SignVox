@@ -5,8 +5,9 @@ let customGesturesDb = [];
 let lastPrediction = null;
 let stableFramesCount = 0;
 const STABILITY_THRESHOLD = 8; // Consec. frames to confirm input
-let wordBuilderText = "";
+let sentenceText = "";
 let autoSpeak = true;
+let autoAppend = true;
 let fpsCount = 0;
 let lastFpsUpdate = Date.now();
 
@@ -31,6 +32,11 @@ const pitchRange = document.getElementById('voice-pitch');
 const rateVal = document.getElementById('rate-val');
 const pitchVal = document.getElementById('pitch-val');
 const autoSpeakToggle = document.getElementById('auto-speak-toggle');
+const autoAppendToggle = document.getElementById('auto-append-toggle');
+const addLetterBtn = document.getElementById('add-letter-btn');
+const addSpaceBtn = document.getElementById('add-space-btn');
+const backspaceBtn = document.getElementById('backspace-btn');
+const onscreenKeyboard = document.getElementById('onscreen-keyboard');
 
 const gestureLabelInput = document.getElementById('gesture-label');
 const recordSampleBtn = document.getElementById('record-sample-btn');
@@ -263,56 +269,89 @@ function onResults(results) {
 }
 hands.onResults(onResults);
 
-function handleConfirmedLetter(letter) {
-    if (accumulatedTextBox.querySelector('.placeholder-text')) {
-        accumulatedTextBox.innerHTML = '<p id="accumulated-text"></p>';
-    }
-    const textEl = document.getElementById('accumulated-text');
-    
-    // If it's a word (length > 1), check if matches last word in box
-    if (letter.length > 1) {
-        const words = textEl.textContent.trim().split(/\s+/);
-        const lastWord = words[words.length - 1];
-        if (lastWord !== letter) {
-            if (textEl.textContent.length > 0 && !textEl.textContent.endsWith(' ')) {
-                textEl.textContent += ' ';
-            }
-            textEl.textContent += letter + ' ';
-            wordBuilderText = textEl.textContent;
-            if (autoSpeak) speakText(letter);
-        }
+// Single source of truth for the sentence: `sentenceText`.
+// Every add/space/backspace mutates this string, then renderSentence() reflects it in the DOM.
+function renderSentence() {
+    if (sentenceText.length === 0) {
+        accumulatedTextBox.innerHTML = '<p id="accumulated-text" class="placeholder-text">Translated words will appear here...</p>';
     } else {
-        // If it's a letter, check if matches last character in box
-        const lastChar = textEl.textContent.slice(-1);
-        if (lastChar !== letter) {
-            textEl.textContent += letter;
-            wordBuilderText = textEl.textContent;
-            if (autoSpeak) speakText(letter);
-        }
+        accumulatedTextBox.innerHTML = '<p id="accumulated-text"></p>';
+        document.getElementById('accumulated-text').textContent = sentenceText;
     }
 }
 
-function addSpaceToWord() {
-    const textEl = document.getElementById('accumulated-text');
-    if (!textEl || textEl.classList.contains('placeholder-text')) return;
-    const current = textEl.textContent;
-    if (current.length > 0 && current.charAt(current.length - 1) !== ' ') {
-        textEl.textContent += ' ';
-        wordBuilderText = textEl.textContent;
-        const words = current.trim().split(' ');
-        if (words[words.length-1] && autoSpeak) speakText(words[words.length-1]);
+// Appends a letter/word to the sentence. Works the same whether it came from
+// the camera (auto-detect) or a manual tap on the on-screen keyboard —
+// no more silently dropping repeated letters (e.g. the double L in "HELLO").
+function addLetterToSentence(letter, { speak = true } = {}) {
+    if (!letter) return;
+    sentenceText += letter;
+    renderSentence();
+    if (speak && autoSpeak) speakText(letter);
+}
+
+function addSpaceToSentence({ speak = true } = {}) {
+    if (sentenceText.length === 0 || sentenceText.endsWith(' ')) return;
+    sentenceText += ' ';
+    renderSentence();
+    if (speak && autoSpeak) {
+        const words = sentenceText.trim().split(' ');
+        const lastWord = words[words.length - 1];
+        if (lastWord) speakText(lastWord);
     }
+}
+
+function backspaceSentence() {
+    if (sentenceText.length === 0) return;
+    sentenceText = sentenceText.slice(0, -1);
+    renderSentence();
 }
 
 function clearWordAccumulator() {
-    accumulatedTextBox.innerHTML = '<p id="accumulated-text" class="placeholder-text">Translated words will appear here...</p>';
-    wordBuilderText = ""; lastPrediction = null;
+    sentenceText = "";
+    lastPrediction = null;
+    renderSentence();
 }
 clearTextBtn.addEventListener('click', clearWordAccumulator);
 speakSentenceBtn.addEventListener('click', () => {
-    const textEl = document.getElementById('accumulated-text');
-    if (textEl && !textEl.classList.contains('placeholder-text')) speakText(textEl.textContent);
+    if (sentenceText.length > 0) speakText(sentenceText);
 });
+
+// Called automatically once the camera holds a stable detection for
+// STABILITY_THRESHOLD frames. Only runs when "Auto-add from camera" is on.
+function handleConfirmedLetter(letter) {
+    if (!autoAppend) return;
+    addLetterToSentence(letter);
+}
+
+function addSpaceToWord() {
+    addSpaceToSentence();
+}
+
+// --- Manual controls ---
+addLetterBtn.addEventListener('click', () => {
+    const letter = currentLetterText.textContent;
+    if (letter && letter !== '—' && letter !== 'Unknown') addLetterToSentence(letter);
+});
+addSpaceBtn.addEventListener('click', () => addSpaceToSentence());
+backspaceBtn.addEventListener('click', () => backspaceSentence());
+autoAppendToggle.addEventListener('change', () => { autoAppend = autoAppendToggle.checked; });
+
+// Build the on-screen A-Z keyboard once
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(letter => {
+    const key = document.createElement('button');
+    key.type = 'button';
+    key.className = 'key-btn';
+    key.textContent = letter;
+    key.addEventListener('click', () => addLetterToSentence(letter));
+    onscreenKeyboard.appendChild(key);
+});
+const spaceKey = document.createElement('button');
+spaceKey.type = 'button';
+spaceKey.className = 'key-btn key-space';
+spaceKey.textContent = 'Space';
+spaceKey.addEventListener('click', () => addSpaceToSentence());
+onscreenKeyboard.appendChild(spaceKey);
 
 // Record samples
 recordSampleBtn.addEventListener('click', () => {
