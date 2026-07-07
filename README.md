@@ -208,29 +208,29 @@ python gui.py
 **Institution:** Sapthagiri NPS University, Bangalore
 **Course:** B.Tech — 1st Year
 
-| Name | Role |
-|------|------|
+| Name |
+|------|
 | **A L Prajwal Rao** 
 
 **Institution:** Sapthagiri NPS University, Bangalore
 **Course:** B.Tech — 1st Year
 
-| Name | Role |
-|------|------|
+| Name |
+|------|
 | **Abhay Surya S** 
 
 **Institution:** Sapthagiri NPS University, Bangalore
 **Course:** B.Tech — 1st Year
 
-| Name | Role |
-|------|------|
+| Name |
+|------|
 | **Adithya Raj** 
 
 **Institution:** Sapthagiri NPS University, Bangalore
 **Course:** B.Tech — 1st Year
 
-| Name | Role |
-|------|------|
+| Name |
+|------|
 | **Ajit Suresh Patgar** 
 
 **Institution:** Sapthagiri NPS University, Bangalore
