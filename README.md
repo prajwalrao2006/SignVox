@@ -201,8 +201,8 @@ python gui.py
 
 ## 👥 Team
 
-| Name | Role |
-|------|------|
+| Name |
+|------|
 | **Aadithya Kumar** 
 
 **Institution:** Sapthagiri NPS University, Bangalore
